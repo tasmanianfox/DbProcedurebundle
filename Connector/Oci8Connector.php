@@ -2,10 +2,13 @@
 namespace TFox\DbProcedureBundle\Connector;
 
 
+use Symfony\Component\PropertyAccess\PropertyAccess;
+
 class Oci8Connector extends AbstractConnector
 {
 
     const PARAMETER_TYPE_VARCHAR = 'VARCHAR';
+    const PARAMETER_TYPE_NUMBER = 'NUMBER';
     const PARAMETER_TYPE_CLOB = 'CLOB';
 
     /**
@@ -42,6 +45,18 @@ class Oci8Connector extends AbstractConnector
         }
         $cursor = $this->cursors[$cursorName];
         $result = oci_fetch_assoc($cursor);
+        if(true == is_array($result)) {
+
+
+
+            foreach($result as $resultKey => $resultValue) {
+                if(true == is_object($resultValue)) {
+                    $result[$resultKey] = $resultValue->load();
+                    $resultValue->free();
+                }
+            }
+        }
+
         return $result;
     }
 
@@ -50,6 +65,8 @@ class Oci8Connector extends AbstractConnector
     {
         if(AbstractConnector::PARAMETER_TYPE_STRING == strtoupper($type)) {
             return self::PARAMETER_TYPE_VARCHAR;
+        } else if(AbstractConnector::PARAMETER_TYPE_INTEGER == strtoupper($type)) {
+            return self::PARAMETER_TYPE_NUMBER;
         }
         return strtoupper($type);
     }
@@ -90,19 +107,22 @@ class Oci8Connector extends AbstractConnector
     {
         $this->values = array();
         $this->cursors  = array();
-
         foreach($this->arguments as $argument) {
             $oracleType = $this->getOracleType($argument['type']);
             $argumentName = $this->formatArgument($argument['name']);
             if(self::PARAMETER_TYPE_CURSOR == $argument['type']) {
                 $this->cursors[$argument['name']] = oci_new_cursor($this->connectionResource);
-                oci_bind_by_name($this->statementResource, $argumentName, $this->cursors[$argument['name']], - 1, $oracleType);
-
+                oci_bind_by_name($this->statementResource, $argumentName, $this->cursors[$argument['name']], -1, $oracleType);
+            } else if(AbstractConnector::PARAMETER_TYPE_BLOB == $argument['type']) {
+                $this->values[$argument['name']] = oci_new_descriptor($this->connectionResource);
+                oci_bind_by_name($this->statementResource, $argumentName, $this->values[$argument['name']], -1, $oracleType);
+                if (false == is_null($argument['value'])) {
+                    $this->values[$argument['name']]->writetemporary($argument['value']);
+                }
             } else {
                 $this->values[$argument['name']] = $argument['value'];
                 oci_bind_by_name($this->statementResource, $argumentName, $this->values[$argument['name']], - 1, $oracleType);
             }
-
         }
     }
 
@@ -111,6 +131,22 @@ class Oci8Connector extends AbstractConnector
         oci_execute($this->statementResource);
         foreach($this->cursors as $cursor) {
             oci_execute($cursor);
+        }
+
+        // Update values
+        $accessor = PropertyAccess::createPropertyAccessor();
+        foreach($this->values as $valueKey => $value) {
+            foreach($this->arguments as $argument) {
+                if($argument['name'] == $valueKey) {
+                    if(true == $accessor->isWritable($this->procedure, $argument['property'])) {
+                        if(true == is_object($value)) {
+                            $value = $value->load();
+                        }
+                        $accessor->setValue($this->procedure, $argument['property'], $value);
+                    }
+                }
+            }
+
         }
     }
 

@@ -11,6 +11,7 @@ abstract class AbstractConnector
 {
 
     const PARAMETER_TYPE_STRING = 'STRING';
+    const PARAMETER_TYPE_INTEGER = 'INTEGER';
     const PARAMETER_TYPE_CURSOR = 'CURSOR';
     const PARAMETER_TYPE_BLOB = 'BLOB';
 
@@ -78,28 +79,30 @@ abstract class AbstractConnector
             foreach($propertyAnnotations as $propertyAnnotation) {
                 if($propertyAnnotation instanceof Parameter) {
                     $propertyReflection->setAccessible(true);
-                    $this->readArgument($propertyAnnotation, $propertyReflection->getValue($this->procedure));
+                    $this->readArgument($propertyAnnotation, $propertyReflection->getValue($this->procedure),
+                        $propertyReflection->getName());
                     $propertyReflection->setAccessible(false);
                 }
             }
         }
 
         foreach($this->procedureAnnotation->getCursors() as $cursorName) {
-            $this->addArgument($cursorName, 'cursor', null);
+            $this->addArgument($cursorName, 'cursor', null, null);
         }
     }
 
-    protected function readArgument(Parameter $parameterAnnotation, $value)
+    protected function readArgument(Parameter $parameterAnnotation, $value, $propertyName)
     {
-        $this->addArgument($parameterAnnotation->getName(), $parameterAnnotation->getType(), $value);
+        $this->addArgument($parameterAnnotation->getName(), $parameterAnnotation->getType(), $value, $propertyName);
     }
 
-    protected function addArgument($name, $type, $value)
+    protected function addArgument($name, $type, $value, $propertyName)
     {
         $this->arguments[] = array(
             'name' => $name,
             'type' => $this->translateArgumentType($type),
-            'value' => $value
+            'value' => $value,
+            'property' => $propertyName
         );
     }
 
