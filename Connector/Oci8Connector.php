@@ -1,10 +1,8 @@
 <?php
-namespace TFox\DbProcedureBundle\QueryBuilder;
+namespace TFox\DbProcedureBundle\Connector;
 
 
-use Doctrine\DBAL\Driver\OCI8\OCI8Statement;
-
-class Oci8QueryBuilder extends AbstractQueryBuilder
+class Oci8Connector extends AbstractConnector
 {
 
     const PARAMETER_TYPE_VARCHAR = 'VARCHAR';
@@ -32,9 +30,25 @@ class Oci8QueryBuilder extends AbstractQueryBuilder
      */
     protected $cursors;
 
+    public function getParameters()
+    {
+        return $this->values;
+    }
+
+    public function fetchCursor($cursorName)
+    {
+        if(false == array_key_exists($cursorName, $this->cursors)) {
+            throw new \Exception(sprintf('Cursor "%s" not found', $cursorName));
+        }
+        $cursor = $this->cursors[$cursorName];
+        $result = oci_fetch_assoc($cursor);
+        return $result;
+    }
+
+
     protected function translateArgumentType($type)
     {
-        if(AbstractQueryBuilder::PARAMETER_TYPE_STRING == strtoupper($type)) {
+        if(AbstractConnector::PARAMETER_TYPE_STRING == strtoupper($type)) {
             return self::PARAMETER_TYPE_VARCHAR;
         }
         return strtoupper($type);
@@ -98,10 +112,6 @@ class Oci8QueryBuilder extends AbstractQueryBuilder
         foreach($this->cursors as $cursor) {
             oci_execute($cursor);
         }
-
-
-        var_dump($this->values);
-        var_dump($this->cursors);die;
     }
 
 

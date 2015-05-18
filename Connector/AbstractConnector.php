@@ -1,5 +1,5 @@
 <?php
-namespace TFox\DbProcedureBundle\QueryBuilder;
+namespace TFox\DbProcedureBundle\Connector;
 
 use Doctrine\Common\Annotations\Reader;
 use Doctrine\DBAL\Connection;
@@ -7,7 +7,7 @@ use TFox\DbProcedureBundle\Annotation\Parameter;
 use TFox\DbProcedureBundle\Annotation\Procedure;
 use TFox\DbProcedureBundle\Procedure\ProcedureInterface;
 
-abstract class AbstractQueryBuilder
+abstract class AbstractConnector
 {
 
     const PARAMETER_TYPE_STRING = 'STRING';

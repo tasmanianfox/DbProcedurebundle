@@ -4,9 +4,9 @@ use Doctrine\Bundle\DoctrineBundle\Registry;
 use Symfony\Bridge\Doctrine\RegistryInterface;
 use Doctrine\Common\Annotations\Reader;
 use TFox\DbProcedureBundle\Annotation\Procedure;
+use TFox\DbProcedureBundle\Connector\AbstractConnector;
+use TFox\DbProcedureBundle\Connector\Oci8Connector;
 use TFox\DbProcedureBundle\Procedure\ProcedureInterface;
-use TFox\DbProcedureBundle\QueryBuilder\AbstractQueryBuilder;
-use TFox\DbProcedureBundle\QueryBuilder\Oci8QueryBuilder;
 
 /**
  * Executes procedures
@@ -43,7 +43,8 @@ class ProcedureService
         $classAnnotations = $this->annotationReader->getClassAnnotations($classReflection);
         foreach($classAnnotations as $classAnnotation) {
             if($classAnnotation instanceof Procedure) {
-                $this->execProcedure($procedure, $classAnnotation);
+                $connector = $this->execProcedure($procedure, $classAnnotation);
+                return $connector;
             }
         }
     }
@@ -51,6 +52,8 @@ class ProcedureService
     /**
      * @param ProcedureInterface $procedure
      * @param Procedure $procedureAnnotation
+     * @return AbstractConnector
+     * @throws \Exception
      */
     private function execProcedure(ProcedureInterface $procedure, Procedure $procedureAnnotation)
     {
@@ -62,15 +65,15 @@ class ProcedureService
         $connection = $entityManager->getConnection();
         $driverName = $connection->getDriver()->getName();
 
-        /* @var $queryBuilder AbstractQueryBuilder */
-        $queryBuilder = null;
+        /* @var $connector AbstractConnector */
+        $connector = null;
         if('oci8' == $driverName) {
-            $queryBuilder = new Oci8QueryBuilder($connection);
+            $connector = new Oci8Connector($connection);
         }
-        if(true == is_null($queryBuilder)) {
-            throw new \Exception(sprintf('Unsupported driver name: %s', $driverName));
+        if(true == is_null($connector)) {
+            throw new \Exception(sprintf('Unsupported driver: %s', $driverName));
         }
-        $result = $queryBuilder->execute($procedure, $procedureAnnotation, $this->annotationReader);
-        return $result;
+        $connector->execute($procedure, $procedureAnnotation, $this->annotationReader);
+        return $connector;
     }
 }
