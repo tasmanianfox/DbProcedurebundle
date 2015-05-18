@@ -2,13 +2,17 @@
 namespace TFox\DbProcedureBundle\QueryBuilder;
 
 use Doctrine\Common\Annotations\Reader;
-use Doctrine\DBAL\Driver\Connection;
+use Doctrine\DBAL\Connection;
 use TFox\DbProcedureBundle\Annotation\Parameter;
 use TFox\DbProcedureBundle\Annotation\Procedure;
 use TFox\DbProcedureBundle\Procedure\ProcedureInterface;
 
 abstract class AbstractQueryBuilder
 {
+
+    const PARAMETER_TYPE_STRING = 'STRING';
+    const PARAMETER_TYPE_CURSOR = 'CURSOR';
+    const PARAMETER_TYPE_BLOB = 'BLOB';
 
     /**
      * @var Connection
@@ -34,6 +38,16 @@ abstract class AbstractQueryBuilder
      * @var array
      */
     protected $arguments;
+
+    /**
+     * @var string
+     */
+    protected $querySql;
+
+    /**
+     * @var \Doctrine\DBAL\Statement
+     */
+    protected $statement;
 
     public function __construct(Connection $connection)
     {
@@ -94,4 +108,6 @@ abstract class AbstractQueryBuilder
     protected abstract function buildQuery();
 
     protected abstract function executeQuery();
+
+    public function cleanup() {}
 }
