@@ -1,4 +1,4 @@
 services:
     db_procedure.service:
         class: TFox\DbProcedureBundle\Service\ProcedureService
-        arguments: [ "@doctrine", "@annotation_reader" ]
+        arguments: [ "@doctrine", "@annotation_reader", "@event_dispatcher" ]

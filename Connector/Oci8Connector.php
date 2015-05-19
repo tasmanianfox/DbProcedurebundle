@@ -3,6 +3,8 @@ namespace TFox\DbProcedureBundle\Connector;
 
 
 use Symfony\Component\PropertyAccess\PropertyAccess;
+use TFox\DbProcedureBundle\Event\PostCursorFetchedEvent;
+use TFox\DbProcedureBundle\TFoxDbProcedureEvents;
 
 class Oci8Connector extends AbstractConnector
 {
@@ -38,17 +40,20 @@ class Oci8Connector extends AbstractConnector
         return $this->values;
     }
 
-    public function fetchCursor($cursorName)
+    public function fetch($fetchType = self::FETCH_TYPE_ASSOC, $cursorName = null)
     {
         if(false == array_key_exists($cursorName, $this->cursors)) {
             throw new \Exception(sprintf('Cursor "%s" not found', $cursorName));
         }
         $cursor = $this->cursors[$cursorName];
-        $result = oci_fetch_assoc($cursor);
+        if(self::FETCH_TYPE_ASSOC == $fetchType) {
+            $result = oci_fetch_assoc($cursor);
+        } elseif(self::FETCH_TYPE_ARRAY == $fetchType) {
+            $result = oci_fetch_array($cursor);
+        } else {
+            throw new \Exception(sprintf('Unsupported fetch type: %s', $fetchType));
+        }
         if(true == is_array($result)) {
-
-
-
             foreach($result as $resultKey => $resultValue) {
                 if(true == is_object($resultValue)) {
                     $result[$resultKey] = $resultValue->load();
@@ -56,7 +61,9 @@ class Oci8Connector extends AbstractConnector
                 }
             }
         }
-
+        $event = new PostCursorFetchedEvent($this->procedure, $result);
+        $this->eventDispatcher->dispatch(TFoxDbProcedureEvents::CURSOR_FETCHED_POST, $event);
+        $result = $event->getResult();
         return $result;
     }
 
