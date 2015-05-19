@@ -2,7 +2,7 @@
 This bundle helps to run stored routines in Symfony2. At the moment only support of Oracle database is implemented.
 
 ## Installation
-1. To install a development version, add to composer.json the entry below:
+* To install a development version, add to composer.json the entry below:
 ```
 "require": {
   ...
@@ -11,7 +11,7 @@ This bundle helps to run stored routines in Symfony2. At the moment only support
 ```
 Please check out link https://packagist.org/packages/tfox/db-procedure-bundle to view a list of stable versions.
 
-2. Add to AppKernel.php the line below:
+* Add to AppKernel.php the line below:
 ```
 $bundles = array(
   ...
