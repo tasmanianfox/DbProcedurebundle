@@ -29,7 +29,7 @@ use TFox\DbProcedureBundle\Annotation as DbProcedure;
 use TFox\DbProcedureBundle\Procedure\ProcedureInterface;
 
 /**
- * SQL-query to call the described function: demo_package.demo_procedure(some_id:NUMBER, contents:BLOB:OUT, ret_cursor:CURSOR)
+ * Declaration of the described function: demo_package.demo_procedure(some_id:NUMBER, contents:BLOB:OUT, ret_cursor:CURSOR)
  * @DbProcedure\Procedure(package="demo_package", name="demo_procedure", entity_manager="oracle_em", cursors={ "ret_cursor" })
  */
 class DemoProcedure implements ProcedureInterface
