@@ -6,7 +6,7 @@ use Doctrine\DBAL\Connection;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use TFox\DbProcedureBundle\Annotation\Parameter;
 use TFox\DbProcedureBundle\Annotation\Procedure;
-use TFox\DbProcedureBundle\Procedure\ProcedureInterface;
+use TFox\DbProcedureBundle\Procedure\AbstractProcedure;
 
 abstract class AbstractConnector
 {
@@ -25,7 +25,7 @@ abstract class AbstractConnector
     protected $connection;
 
     /**
-     * @var ProcedureInterface
+     * @var AbstractProcedure
      */
     protected $procedure;
 
@@ -67,7 +67,7 @@ abstract class AbstractConnector
         $this->connection = $connection;
     }
 
-    public function execute(ProcedureInterface $procedure,
+    public function execute(AbstractProcedure $procedure,
         Procedure $procedureAnnotation, Reader $annotationReader)
     {
         $this->procedure = $procedure;

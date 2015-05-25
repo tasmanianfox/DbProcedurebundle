@@ -2,23 +2,23 @@
 namespace TFox\DbProcedureBundle\Event;
 
 use Symfony\Component\EventDispatcher\Event;
-use TFox\DbProcedureBundle\Procedure\ProcedureInterface;
+use TFox\DbProcedureBundle\Procedure\AbstractProcedure;
 
 class PostProcedureExecutedEvent extends Event
 {
 
     /**
-     * @var ProcedureInterface
+     * @var AbstractProcedure
      */
     private $procedure;
 
-    public function __construct(ProcedureInterface $procedure)
+    public function __construct(AbstractProcedure $procedure)
     {
         $this->procedure = $procedure;
     }
 
     /**
-     * @return ProcedureInterface
+     * @return AbstractProcedure
      */
     public function getProcedure()
     {
@@ -26,7 +26,7 @@ class PostProcedureExecutedEvent extends Event
     }
 
     /**
-     * @param ProcedureInterface $procedure
+     * @param AbstractProcedure $procedure
      */
     public function setProcedure($procedure)
     {

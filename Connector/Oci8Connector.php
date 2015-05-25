@@ -61,6 +61,7 @@ class Oci8Connector extends AbstractConnector
                 }
             }
         }
+        $result = $this->procedure->processFetchedResult($result);
         $event = new PostCursorFetchedEvent($this->procedure, $result);
         $this->eventDispatcher->dispatch(TFoxDbProcedureEvents::CURSOR_FETCHED_POST, $event);
         $result = $event->getResult();
@@ -88,7 +89,7 @@ class Oci8Connector extends AbstractConnector
     {
         $argumentSqls = array();
         foreach($this->arguments as $argument) {
-            $argumentSqls[] = $this->formatArgument($argument['name']);
+            $argumentSqls[] = $this->formatArgument($argument);
         }
         $argumentsSql = implode(', ', $argumentSqls);
         $this->querySql = sprintf('BEGIN %s.%s(%s); END;', $this->procedureAnnotation->getPackage(),
@@ -106,7 +107,6 @@ class Oci8Connector extends AbstractConnector
         $connectionPropertyReflection->setAccessible(true);
         $this->connectionResource = $connectionPropertyReflection->getValue($dbalConnection);
         $connectionPropertyReflection->setAccessible(false);
-
         $this->statementResource = oci_parse($this->connectionResource, $this->querySql);
     }
 
@@ -116,7 +116,7 @@ class Oci8Connector extends AbstractConnector
         $this->cursors  = array();
         foreach($this->arguments as $argument) {
             $oracleType = $this->getOracleType($argument['type']);
-            $argumentName = $this->formatArgument($argument['name']);
+            $argumentName = $this->formatArgument($argument);
             if(self::PARAMETER_TYPE_CURSOR == $argument['type']) {
                 $this->cursors[$argument['name']] = oci_new_cursor($this->connectionResource);
                 oci_bind_by_name($this->statementResource, $argumentName, $this->cursors[$argument['name']], -1, $oracleType);
@@ -126,7 +126,7 @@ class Oci8Connector extends AbstractConnector
                 if (false == is_null($argument['value'])) {
                     $this->values[$argument['name']]->writetemporary($argument['value']);
                 }
-            } else {
+            } else if(!(true == is_null($argument['value']) && AbstractConnector::PARAMETER_TYPE_CURSOR != $argument['type'])) {
                 $this->values[$argument['name']] = $argument['value'];
                 oci_bind_by_name($this->statementResource, $argumentName, $this->values[$argument['name']], - 1, $oracleType);
             }
@@ -135,7 +135,9 @@ class Oci8Connector extends AbstractConnector
 
     protected function executeQuery()
     {
-        oci_execute($this->statementResource);
+        if(false == oci_execute($this->statementResource)) {
+            throw new \Exception(sprintf('Failed to execute query: "%s"', $this->querySql));
+        }
         foreach($this->cursors as $cursor) {
             oci_execute($cursor);
         }
@@ -178,7 +180,10 @@ class Oci8Connector extends AbstractConnector
 
     private function formatArgument($argument)
     {
-        return ':'.$argument;
+        if(true == is_null($argument['value']) && AbstractConnector::PARAMETER_TYPE_CURSOR != $argument['type']) {
+            return 'NULL';
+        }
+        return ':'.$argument['name'];
     }
 
     public function cleanup()
