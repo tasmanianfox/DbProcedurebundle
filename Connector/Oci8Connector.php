@@ -120,7 +120,7 @@ class Oci8Connector extends AbstractConnector
             if(self::PARAMETER_TYPE_CURSOR == $argument['type']) {
                 $this->cursors[$argument['name']] = oci_new_cursor($this->connectionResource);
                 oci_bind_by_name($this->statementResource, $argumentName, $this->cursors[$argument['name']], -1, $oracleType);
-            } else if(AbstractConnector::PARAMETER_TYPE_BLOB == $argument['type']) {
+            } else if(true == in_array($argument['type'], array(AbstractConnector::PARAMETER_TYPE_BLOB, self::PARAMETER_TYPE_CLOB))) {
                 $this->values[$argument['name']] = oci_new_descriptor($this->connectionResource);
                 oci_bind_by_name($this->statementResource, $argumentName, $this->values[$argument['name']], -1, $oracleType);
                 if (false == is_null($argument['value'])) {
