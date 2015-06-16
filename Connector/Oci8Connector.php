@@ -118,17 +118,25 @@ class Oci8Connector extends AbstractConnector
             $oracleType = $this->getOracleType($argument['type']);
             $argumentName = $this->formatArgument($argument);
             if(self::PARAMETER_TYPE_CURSOR == $argument['type']) {
+                // Bind cursor
                 $this->cursors[$argument['name']] = oci_new_cursor($this->connectionResource);
                 oci_bind_by_name($this->statementResource, $argumentName, $this->cursors[$argument['name']], -1, $oracleType);
             } else if(true == in_array($argument['type'], array(AbstractConnector::PARAMETER_TYPE_BLOB, self::PARAMETER_TYPE_CLOB))) {
+                // Bind LOB
                 $this->values[$argument['name']] = oci_new_descriptor($this->connectionResource);
                 oci_bind_by_name($this->statementResource, $argumentName, $this->values[$argument['name']], -1, $oracleType);
                 if (false == is_null($argument['value'])) {
                     $this->values[$argument['name']]->writetemporary($argument['value']);
                 }
-            } else if(!(true == is_null($argument['value']) && AbstractConnector::PARAMETER_TYPE_CURSOR != $argument['type'])) {
+            } else if(AbstractConnector::PARAMETER_TYPE_CURSOR != $argument['type'] &&
+                    false == (is_null($argument['value']) && false == $argument['is_out'])) {
+                // Bind other type of parameter
                 $this->values[$argument['name']] = $argument['value'];
-                oci_bind_by_name($this->statementResource, $argumentName, $this->values[$argument['name']], - 1, $oracleType);
+                if(true == is_null($argument['value'])) {
+                    oci_bind_by_name($this->statementResource, $argumentName, $this->values[$argument['name']], 255);
+                } else {
+                    oci_bind_by_name($this->statementResource, $argumentName, $this->values[$argument['name']], -1, $oracleType);
+                }
             }
         }
     }
@@ -180,7 +188,8 @@ class Oci8Connector extends AbstractConnector
 
     private function formatArgument($argument)
     {
-        if(true == is_null($argument['value']) && AbstractConnector::PARAMETER_TYPE_CURSOR != $argument['type']) {
+        if(true == is_null($argument['value']) && AbstractConnector::PARAMETER_TYPE_CURSOR != $argument['type']
+                && false == $argument['is_out']) {
             return 'NULL';
         }
         return ':'.$argument['name'];

@@ -99,22 +99,24 @@ abstract class AbstractConnector
         }
 
         foreach($this->procedureAnnotation->getCursors() as $cursorName) {
-            $this->addArgument($cursorName, 'cursor', null, null);
+            $this->addArgument($cursorName, 'cursor', null, null, false);
         }
     }
 
     protected function readArgument(Parameter $parameterAnnotation, $value, $propertyName)
     {
-        $this->addArgument($parameterAnnotation->getName(), $parameterAnnotation->getType(), $value, $propertyName);
+        $this->addArgument($parameterAnnotation->getName(), $parameterAnnotation->getType(),
+            $value, $propertyName, $parameterAnnotation->isOut());
     }
 
-    protected function addArgument($name, $type, $value, $propertyName)
+    protected function addArgument($name, $type, $value, $propertyName, $isOut)
     {
         $this->arguments[] = array(
             'name' => $name,
             'type' => $this->translateArgumentType($type),
             'value' => $value,
-            'property' => $propertyName
+            'property' => $propertyName,
+            'is_out' => $isOut
         );
     }
 

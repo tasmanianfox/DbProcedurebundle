@@ -22,6 +22,11 @@ class Parameter implements Annotation
      */
     private $name;
 
+    /**
+     * @var bool
+     */
+    private $out = false;
+
     public function __construct(array $options = array())
     {
         if(true == array_key_exists('type', $options)) {
@@ -29,6 +34,9 @@ class Parameter implements Annotation
         }
         if(true == array_key_exists('name', $options)) {
             $this->name = $options['name'];
+        }
+        if(true == array_key_exists('out', $options)) {
+            $this->out = $options['out'];
         }
     }
 
@@ -47,6 +55,16 @@ class Parameter implements Annotation
     {
         return $this->name;
     }
+
+    /**
+     * @return boolean
+     */
+    public function isOut()
+    {
+        return $this->out;
+    }
+
+
 
 
 }
