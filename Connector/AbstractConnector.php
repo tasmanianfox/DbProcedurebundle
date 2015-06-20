@@ -15,6 +15,8 @@ abstract class AbstractConnector
     const PARAMETER_TYPE_INTEGER = 'INTEGER';
     const PARAMETER_TYPE_CURSOR = 'CURSOR';
     const PARAMETER_TYPE_BLOB = 'BLOB';
+    const PARAMETER_TYPE_DATE = 'DATE';
+    const PARAMETER_TYPE_DATETIME = 'DATETIME';
 
     const FETCH_TYPE_ASSOC = 'assoc';
     const FETCH_TYPE_ARRAY = 'array';

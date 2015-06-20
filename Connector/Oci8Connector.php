@@ -89,7 +89,7 @@ class Oci8Connector extends AbstractConnector
     {
         $argumentSqls = array();
         foreach($this->arguments as $argument) {
-            $argumentSqls[] = $this->formatArgument($argument);
+            $argumentSqls[] = $this->getArgumentSql($argument);
         }
         $argumentsSql = implode(', ', $argumentSqls);
         $this->querySql = sprintf('BEGIN %s.%s(%s); END;', $this->procedureAnnotation->getPackage(),
@@ -116,7 +116,7 @@ class Oci8Connector extends AbstractConnector
         $this->cursors  = array();
         foreach($this->arguments as $argument) {
             $oracleType = $this->getOracleType($argument['type']);
-            $argumentName = $this->formatArgument($argument);
+            $argumentName = $this->getBindKeyForArgument($argument);
             if(self::PARAMETER_TYPE_CURSOR == $argument['type']) {
                 // Bind cursor
                 $this->cursors[$argument['name']] = oci_new_cursor($this->connectionResource);
@@ -128,8 +128,12 @@ class Oci8Connector extends AbstractConnector
                 if (false == is_null($argument['value'])) {
                     $this->values[$argument['name']]->writetemporary($argument['value']);
                 }
+            } else if(AbstractConnector::PARAMETER_TYPE_DATE == $argument['type'] && false == is_null($argument['value'])) {
+                $date = $argument['value'];
+                $this->values[$argument['name']] = $date->format('d-m-Y');
+                oci_bind_by_name($this->statementResource, $argumentName, $this->values[$argument['name']]);
             } else if(AbstractConnector::PARAMETER_TYPE_CURSOR != $argument['type'] &&
-                    false == (is_null($argument['value']) && false == $argument['is_out'])) {
+                false == (is_null($argument['value']) && false == $argument['is_out'])) {
                 // Bind other type of parameter
                 $this->values[$argument['name']] = $argument['value'];
                 if(true == is_null($argument['value'])) {
@@ -186,14 +190,32 @@ class Oci8Connector extends AbstractConnector
         }
     }
 
-    private function formatArgument($argument)
+    /**
+     * Creates a part of SQL-query for given argument
+     * @param $argument
+     * @return string
+     */
+    private function getArgumentSql($argument)
     {
         if(true == is_null($argument['value']) && AbstractConnector::PARAMETER_TYPE_CURSOR != $argument['type']
                 && false == $argument['is_out']) {
             return 'NULL';
+        } elseif(false == is_null($argument['value']) && AbstractConnector::PARAMETER_TYPE_DATE == $argument['type']) {
+            return sprintf('TO_DATE(%s, \'dd-mm-yyyy\')', $this->getBindKeyForArgument($argument));
         }
+        return $this->getBindKeyForArgument($argument);
+    }
+
+    /**
+     * Prepares an argument name for uasge in oci_bind_by_name function
+     * @param $argument
+     * @return string
+     */
+    private function getBindKeyForArgument($argument)
+    {
         return ':'.$argument['name'];
     }
+
 
     public function cleanup()
     {
