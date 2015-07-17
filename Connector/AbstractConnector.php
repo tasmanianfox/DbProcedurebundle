@@ -4,6 +4,7 @@ namespace TFox\DbProcedureBundle\Connector;
 use Doctrine\Common\Annotations\Reader;
 use Doctrine\DBAL\Connection;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use TFox\DbProcedureBundle\Annotation\Cursor;
 use TFox\DbProcedureBundle\Annotation\Parameter;
 use TFox\DbProcedureBundle\Annotation\Procedure;
 use TFox\DbProcedureBundle\Procedure\AbstractProcedure;
@@ -96,6 +97,8 @@ abstract class AbstractConnector
                     $this->readArgument($propertyAnnotation, $propertyReflection->getValue($this->procedure),
                         $propertyReflection->getName());
                     $propertyReflection->setAccessible(false);
+                } elseif($propertyAnnotation instanceof Cursor) {
+                    $this->addArgument($propertyAnnotation->getName(), 'cursor', null, null, false);
                 }
             }
         }

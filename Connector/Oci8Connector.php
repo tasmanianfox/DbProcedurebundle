@@ -1,7 +1,6 @@
 <?php
 namespace TFox\DbProcedureBundle\Connector;
 
-
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use TFox\DbProcedureBundle\Event\PostCursorFetchedEvent;
 use TFox\DbProcedureBundle\TFoxDbProcedureEvents;
