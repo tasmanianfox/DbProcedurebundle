@@ -19,6 +19,8 @@ abstract class AbstractConnector
     const PARAMETER_TYPE_DATE = 'DATE';
     const PARAMETER_TYPE_DATETIME = 'DATETIME';
 
+    CONST PARAMETER_DEFAULT_MAX_LENGTH = 65536;
+
     const FETCH_TYPE_ASSOC = 'assoc';
     const FETCH_TYPE_ARRAY = 'array';
 
@@ -98,31 +100,46 @@ abstract class AbstractConnector
                         $propertyReflection->getName());
                     $propertyReflection->setAccessible(false);
                 } elseif($propertyAnnotation instanceof Cursor) {
-                    $this->addArgument($propertyAnnotation->getName(), 'cursor', null, null, false);
+                    $this->addArgument($propertyAnnotation->getName(), 'cursor', null, null, null, false);
                 }
             }
         }
 
         foreach($this->procedureAnnotation->getCursors() as $cursorName) {
-            $this->addArgument($cursorName, 'cursor', null, null, false);
+            $this->addArgument($cursorName, 'cursor', null, null, null, false);
         }
     }
 
     protected function readArgument(Parameter $parameterAnnotation, $value, $propertyName)
     {
         $this->addArgument($parameterAnnotation->getName(), $parameterAnnotation->getType(),
-            $value, $propertyName, $parameterAnnotation->isOut());
+            $value, $propertyName, $parameterAnnotation->getMaxLength(), $parameterAnnotation->isOut());
     }
 
-    protected function addArgument($name, $type, $value, $propertyName, $isOut)
+    protected function addArgument($name, $type, $value, $propertyName, $maxLength, $isOut)
     {
+        $maxLength = $this->getMaxLength($maxLength);
         $this->arguments[] = array(
             'name' => $name,
             'type' => $this->translateArgumentType($type),
             'value' => $value,
             'property' => $propertyName,
+            'max_length' => $maxLength,
             'is_out' => $isOut
         );
+    }
+
+    /**
+     * Returns a maximum length for argument
+     * @param $input
+     * @return int
+     */
+    private function getMaxLength($input)
+    {
+        if(true == is_null($input)) {
+            return self::PARAMETER_DEFAULT_MAX_LENGTH;
+        }
+        return $input;
     }
 
     protected abstract function translateArgumentType($type);

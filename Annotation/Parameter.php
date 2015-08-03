@@ -27,6 +27,11 @@ class Parameter implements Annotation
      */
     private $out = false;
 
+    /**
+     * @var int
+     */
+    private $maxLength = null;
+
     public function __construct(array $options = array())
     {
         if(true == array_key_exists('type', $options)) {
@@ -34,6 +39,9 @@ class Parameter implements Annotation
         }
         if(true == array_key_exists('name', $options)) {
             $this->name = $options['name'];
+        }
+        if(true == array_key_exists('maxLength', $options)) {
+            $this->maxLength = $options['maxLength'];
         }
         if(true == array_key_exists('out', $options)) {
             $this->out = $options['out'];
@@ -64,6 +72,13 @@ class Parameter implements Annotation
         return $this->out;
     }
 
+    /**
+     * @return int
+     */
+    public function getMaxLength()
+    {
+        return $this->maxLength;
+    }
 
 
 

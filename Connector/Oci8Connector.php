@@ -136,7 +136,7 @@ class Oci8Connector extends AbstractConnector
                 // Bind other type of parameter
                 $this->values[$argument['name']] = $argument['value'];
                 if(true == is_null($argument['value'])) {
-                    oci_bind_by_name($this->statementResource, $argumentName, $this->values[$argument['name']], 255);
+                    oci_bind_by_name($this->statementResource, $argumentName, $this->values[$argument['name']], $argument['max_length']);
                 } else {
                     oci_bind_by_name($this->statementResource, $argumentName, $this->values[$argument['name']], -1, $oracleType);
                 }
